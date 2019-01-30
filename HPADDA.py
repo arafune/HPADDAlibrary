@@ -9,7 +9,6 @@ To use this module:
 from ctypes import *
 
 
-
 class board(object):
     '''
     Wrapper class for HPADDA
@@ -19,17 +18,14 @@ class board(object):
 
     '''
 
-
-    c_lib = cdll.LoadLibrary('./libhpadda.so')
-
-    def __init__(self):
- #       c_lib = cdll.LoadLibrary('./libhpadda.so')
-        res = board.c_lib.initHPADDAboard()
-        if res==0:
+    def __init__(self, vref=5.0):
+        self.engine = cdll.LoadLibrary('./libhpadda.so')
+        self.vref = vref
+        res = self.engine.initHPADDAboard()
+        if res == 0:
             return None
         else:
             return False
-
 
     def readChipId(self):
         id = board.c_lib.ADS1256_ReadChipID()
@@ -38,18 +34,23 @@ class board(object):
         else:
             return False
 
-
     def setSampleRate(self, rate):
-        board.c_lib.ADS1256_SetSampleRate.restype = c_double
-        board.c_lib.ADS1256_SetSampleRate.argypes = (c_double, )
-        return board.c_lib.ADS1256_SetSampleRate(c_double(rate))
-
+        self.engine.ADS1256_SetSampleRate.restype = c_double
+        self.engine.ADS1256_SetSampleRate.argypes = (c_double, )
+        return self.engine.ADS1256_SetSampleRate(c_double(rate))
 
     def delay_us(self, micro_s):
-        board.c_lib.delay_us.restype = c_void_p
-        board.c_lib.delay_us(c_uint64(micro_s))
+        self.engine.delay_us.restype = c_void_p
+        self.engine.delay_us(c_uint64(micro_s))
         return None
 
     def get_a_dc(self, ch):
-        board.c_lib.ADS1256_GetAdc.restype = c_int32
-        return board.c_lib.ADS1256_GetAdc(ch)
+        self.engine.ADS1256_GetAdc.restype = c_int32
+        return self.engine.ADS1256_GetAdc(ch)
+
+    def get_voltage(self, ch):
+        return self.get_a_dc(ch) * self.vref / 0x7fffff
+
+    def close(self):
+        self.engine.closeHPADDAboard()
+        return None
