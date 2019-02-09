@@ -6,10 +6,10 @@ To use this module:
 * libhpadda.so is put in the same direcory for this file.
 '''
 
-from ctypes import *
+import ctypes
 
 
-class Board(object):
+class Board():
     '''
     Wrapper class for HPADDA
 
@@ -19,38 +19,80 @@ class Board(object):
     '''
 
     def __init__(self, vref=5.0):
-        self.engine = cdll.LoadLibrary('./libhpadda.so')
+        '''Init ADS1256
+
+        Parameters
+        ----------
+        vref: float
+           Vref. (default=5.0)
+
+        Return
+        -------
+        None
+'''
+        self.engine = ctypes.cdll.LoadLibrary('./libhpadda.so')
         self.vref = vref
-        res = self.engine.initHPADDAboard()
-        if res == 0:
-            return None
-        else:
-            return False
+        self.engine.initHPADDAboard()
 
-    def readChipId(self):
-        id = board.c_lib.ADS1256_ReadChipID()
-        if id == 3:
+    def read_chip_id(self):
+        ''''Return Chip ID (Default3)
+'''
+        id_num = self.engine.ADS1256_ReadChipID()
+        if id_num == 3:
             return True
-        else:
-            return False
+        return False
 
-    def setSampleRate(self, rate):
-        self.engine.ADS1256_SetSampleRate.restype = c_double
-        self.engine.ADS1256_SetSampleRate.argypes = (c_double, )
-        return self.engine.ADS1256_SetSampleRate(c_double(rate))
+    def set_sample_rate(self, rate):
+        '''Set sample rate
+
+        Return
+        -------
+        float
+
+'''
+        self.engine.ADS1256_SetSampleRate.restype = ctypes.c_double
+        self.engine.ADS1256_SetSampleRate.argypes = (ctypes.c_double, )
+        return self.engine.ADS1256_SetSampleRate(ctypes.c_double(rate))
 
     def delay_us(self, micro_s):
-        self.engine.delay_us.restype = c_void_p
-        self.engine.delay_us(c_uint64(micro_s))
-        return None
+        '''Wait microseconds
 
-    def get_a_dc(self, ch):
-        self.engine.ADS1256_GetAdc.restype = c_int32
-        return self.engine.ADS1256_GetAdc(ch)
+        Parameters
+        ----------
+        micro_s: int
+'''
+        self.engine.delay_us.restype = ctypes.c_void_p
+        self.engine.delay_us(ctypes.c_uint64(micro_s))
 
-    def get_voltage(self, ch):
-        return self.get_a_dc(ch) * self.vref / 0x7fffff
+    def get_adc(self, ch_0_7):
+        '''Get quantized voltage
+
+        Parameters
+        ----------
+        ch: int
+            channel number (0-7)
+
+        Return
+        -------
+        ADC: int
+        '''
+        self.engine.ADS1256_GetAdc.restype = ctypes.c_int32
+        return self.engine.ADS1256_GetAdc(ch_0_7)
+
+    def get_voltage(self, ch_0_7):
+        '''
+        Parameters
+        ----------
+        ch: int
+            channel number (0-7)
+
+        Return
+        -------
+        Voltage: float
+'''
+        return self.get_adc(ch_0_7) * self.vref / 0x7fffff
 
     def close(self):
+        '''close ADS1256
+        '''
         self.engine.closeHPADDAboard()
-        return None
