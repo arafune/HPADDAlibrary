@@ -9,7 +9,7 @@ To use this module:
 from ctypes import *
 
 
-class board(object):
+class Board(object):
     '''
     Wrapper class for HPADDA
 
