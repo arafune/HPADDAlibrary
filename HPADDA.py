@@ -79,6 +79,35 @@ class Board():
         self.engine.ADS1256_GetAdc.restype = ctypes.c_int32
         return self.engine.ADS1256_GetAdc(ch_0_7)
 
+    def get_ave_adc(self, ch_0_7, loop=100):
+        '''Get average value of quantized voltage
+
+        Parameters
+        ----------
+        ch: int
+            channel number
+        loop: int
+            number of measurment in the single channel
+            default: 100
+
+        Return
+        ------
+        ADC: int
+        '''
+        data = []
+        for i in range(loop):
+            adc = self.engine.ADS1256_GetAdc(ch_0_7)
+            data.append(adc)
+        data.sort()
+        start_i = int(loop * 0.25)
+        end_i = int(loop * 0.75)
+        effedat=data[start_i:end_i]
+        return int(sum(effedat)/len(effedat))
+
+    def get_average_v(self, ch_0_7, loop=100):
+        return self.get_ave_adc(ch_0_7) * self.vref / 0x7fffff
+
+
     def get_voltage(self, ch_0_7):
         '''
         Parameters
